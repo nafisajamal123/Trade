@@ -1,111 +1,148 @@
-import React, { useState, useEffect } from "react";
-import axios, { all } from "axios";
-import { VerticalGraph } from "./VerticalGraph";
+import React, { useState, useEffect } from "react"; //Import React and hooks
+import axios, { all } from "axios"; //Import axios for API calls
+import { VerticalGraph } from "./VerticalGraph"; //Import graph component
 
-// import { holdings } from "../data/data";
+// import { holdings } from "../data/data"; //Old local data import
 
-const Holdings = () => {
-  const [allHoldings, setAllHoldings] = useState([]);
+const Holdings = () => { //Create Holdings component
 
-  useEffect(() => {
-    axios.get("http://localhost:3002/allHoldings").then((res) => {
-      // console.log(res.data);
-      setAllHoldings(res.data);
-    });
-  }, []);
+  const [allHoldings, setAllHoldings] = useState([]); //State to store holdings data
 
-  // const labels = ['January', 'February', 'March', 'April', 'May', 'June', 'July'];
-  const labels = allHoldings.map((subArray) => subArray["name"]);
+  useEffect(() => { //Runs when component loads
 
-  const data = {
-    labels,
-    datasets: [
+    axios.get("https://tradebackend-01ra.onrender.com/allHoldings") //Fetch holdings from backend
+      .then((res) => { //When data comes successfully
+
+        setAllHoldings(res.data); //Store API data in state
+
+      });
+
+  }, []); //Empty array means run only once
+
+  const labels = allHoldings.map((subArray) => subArray["name"]); //Get stock names for graph labels
+
+  const data = { //Create Graph data object
+
+    labels, //Add labels into graph
+
+    datasets: [ //Graph dataset array
+
       {
-        label: "Stock Price",
-        data: allHoldings.map((stock) => stock.price),
-        backgroundColor: "rgba(255, 99, 132, 0.5)",
+        label: "Stock Price", //Graph heading
+
+        data: allHoldings.map((stock) => stock.price), //Take only stock prices
+
+        backgroundColor: "rgba(255, 99, 132, 0.5)", //Graph bar color
+
       },
+
     ],
+
   };
 
-  // export const data = {
-  //   labels,
-  //   datasets: [
-  // {
-  //   label: 'Dataset 1',
-  //   data: labels.map(() => faker.datatype.number({ min: 0, max: 1000 })),
-  //   backgroundColor: 'rgba(255, 99, 132, 0.5)',
-  // },
-  //     {
-  //       label: 'Dataset 2',
-  //       data: labels.map(() => faker.datatype.number({ min: 0, max: 1000 })),
-  //       backgroundColor: 'rgba(53, 162, 235, 0.5)',
-  //     },
-  //   ],
-  // };
+  return ( //JSX UI starts
 
-  return (
     <>
-      <h3 className="title">Holdings ({allHoldings.length})</h3>
 
-      <div className="order-table">
-        <table>
-          <tr>
-            <th>Instrument</th>
-            <th>Qty.</th>
-            <th>Avg. cost</th>
-            <th>LTP</th>
-            <th>Cur. val</th>
-            <th>P&L</th>
-            <th>Net chg.</th>
-            <th>Day chg.</th>
+      <h3 className="title">Holdings ({allHoldings.length})</h3> {/*Show total holdings count*/}
+
+      <div className="order-table"> {/*Table container*/}
+
+        <table> {/*Start table*/}
+
+          <tr> {/*Table heading row*/}
+
+            <th>Instrument</th> {/*Stock name heading*/}
+            <th>Qty.</th> {/*Quantity heading*/}
+            <th>Avg. cost</th> {/*Average cost heading*/}
+            <th>LTP</th> {/*Last traded price heading*/}
+            <th>Cur. val</th> {/*Current value heading*/}
+            <th>P&L</th> {/*Profit and loss heading*/}
+            <th>Net chg.</th> {/*Net change heading*/}
+            <th>Day chg.</th> {/*Day change heading*/}
+
           </tr>
 
-          {allHoldings.map((stock, index) => {
-            const curValue = stock.price * stock.qty;
-            const isProfit = curValue - stock.avg * stock.qty >= 0.0;
-            const profClass = isProfit ? "profit" : "loss";
-            const dayClass = stock.isLoss ? "loss" : "profit";
+          {allHoldings.map((stock, index) => { //Loop through each stock
 
-            return (
-              <tr key={index}>
-                <td>{stock.name}</td>
-                <td>{stock.qty}</td>
-                <td>{stock.avg.toFixed(2)}</td>
-                <td>{stock.price.toFixed(2)}</td>
-                <td>{curValue.toFixed(2)}</td>
-                <td className={profClass}>
-                  {(curValue - stock.avg * stock.qty).toFixed(2)}
+            const curValue = stock.price * stock.qty; //Calculate current value
+
+            const isProfit = curValue - stock.avg * stock.qty >= 0.0; //Check if stock is in profit
+
+            const profClass = isProfit ? "profit" : "loss"; //// If profit -> use "profit" class..Else -> use "loss" class
+
+            const dayClass = stock.isLoss ? "loss" : "profit";  // Check if day change is loss or profit
+
+            return ( //Return table row
+
+              <tr key={index}> {/* key helps React identify rows */}
+
+                <td>{stock.name}</td> {/*Show stock name*/}
+
+                <td>{stock.qty}</td> {/*Show quantity*/}
+
+                <td>{stock.avg.toFixed(2)}</td> {/*Show avg price with 2 decimals*/}
+
+                <td>{stock.price.toFixed(2)}</td> {/*Show current price*/}
+
+                <td>{curValue.toFixed(2)}</td> {/*Show current value*/}
+
+                <td className={profClass}> {/*Apply profit/loss color*/}
+                  {(curValue - stock.avg * stock.qty).toFixed(2)} {/*Show profit/loss amount*/}
                 </td>
-                <td className={profClass}>{stock.net}</td>
-                <td className={dayClass}>{stock.day}</td>
+
+                <td className={profClass}>{stock.net}</td> {/*Show net change*/}
+
+                <td className={dayClass}>{stock.day}</td> {/*Show day change*/}
+
               </tr>
+
             );
+
           })}
+
         </table>
+
       </div>
 
-      <div className="row">
-        <div className="col">
+      <div className="row"> {/*Summary row*/}
+
+        <div className="col"> {/*First summary box*/}
+
           <h5>
             29,875.<span>55</span>{" "}
           </h5>
-          <p>Total investment</p>
+
+          <p>Total investment</p> {/*Investment text*/}
+
         </div>
-        <div className="col">
+
+        <div className="col"> {/*Second summary box*/}
+
           <h5>
             31,428.<span>95</span>{" "}
           </h5>
-          <p>Current value</p>
+
+          <p>Current value</p> {/*Current value text*/}
+
         </div>
-        <div className="col">
-          <h5>1,553.40 (+5.20%)</h5>
-          <p>P&L</p>
+
+        <div className="col"> {/*Third summary box*/}
+
+          <h5>1,553.40 (+5.20%)</h5> {/*Profit summary*/}
+
+          <p>P&L</p> {/*P&L text*/}
+
         </div>
+
       </div>
-      <VerticalGraph data={data} />
+
+      <VerticalGraph data={data} /> {/*Send graph data to VerticalGraph component*/}
+
     </>
+
   );
+
 };
 
-export default Holdings;
+export default Holdings; //Export component so other files can use it
